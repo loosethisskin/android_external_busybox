@@ -200,7 +200,7 @@
 #define ENABLE_LFS 0
 #define IF_LFS(...)
 #define IF_NOT_LFS(...) __VA_ARGS__
-#define CONFIG_CROSS_COMPILER_PREFIX "arm-eabi-"
+#define CONFIG_CROSS_COMPILER_PREFIX "i686-android-linux-"
 #define ENABLE_CROSS_COMPILER_PREFIX 1
 #define IF_CROSS_COMPILER_PREFIX(...) __VA_ARGS__
 #define IF_NOT_CROSS_COMPILER_PREFIX(...)

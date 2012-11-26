@@ -297,6 +297,7 @@ NM		= $(CROSS_COMPILE)nm
 STRIP		= $(CROSS_COMPILE)strip
 OBJCOPY		= $(CROSS_COMPILE)objcopy
 OBJDUMP		= $(CROSS_COMPILE)objdump
+PKG_CONFIG	?= $(CROSS_COMPILE)pkg-config
 AWK		= awk
 GENKSYMS	= scripts/genksyms/genksyms
 DEPMOD		= /sbin/depmod
@@ -976,7 +977,9 @@ MRPROPER_FILES += .config .config.old include/asm .version .old_version \
 		  busybox_old
 
 MRPROPER_FILES += include-full/*.h \
-                  include-minimal/*.h
+                  include-minimal/*.h \
+                  include-full-x86/*.h \
+                  include-minimal-x86/*.h
 
 # clean - Delete most, but leave enough to build external modules
 #
