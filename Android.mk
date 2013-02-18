@@ -4,9 +4,6 @@ BB_PATH := $(LOCAL_PATH)
 # Bionic Branches Switches (CM7/AOSP/ICS)
 BIONIC_ICS := true
 
-ifeq ($(TARGET_ARCH),x86)
-CONFIG_SUFFIX="-x86"
-endif
 
 # Make a static library for regex.
 include $(CLEAR_VARS)
@@ -22,6 +19,7 @@ LOCAL_SRC_FILES := $(shell cat $(BB_PATH)/android/librpc.sources)
 LOCAL_C_INCLUDES := $(BB_PATH)/android/librpc
 LOCAL_CFLAGS := -fno-strict-aliasing
 LOCAL_MODULE := libuclibcrpc
+LOCAL_CFLAGS += -fno-strict-aliasing
 include $(BUILD_STATIC_LIBRARY)
 
 
@@ -38,15 +36,21 @@ include $(CLEAR_VARS)
 
 # Execute make clean, make prepare and copy profiles required for normal & static lib (recovery)
 
+
+# Required to change arm-eabi- in .config, but keep the alias on arm (not arm-linux-androideabi-)
+BB_CROSS_COMPILE := $(shell basename $(TARGET_TOOLS_PREFIX))
+ifeq ($(TARGET_ARCH),arm)
+    BB_CROSS_COMPILE = arm-eabi-
+endif
+
 KERNEL_MODULES_DIR ?= /system/lib/modules
-BUSYBOX_CONFIG := minimal full minimal-x86 full-x86
+BUSYBOX_CONFIG := minimal full
 $(BUSYBOX_CONFIG):
 	@echo -e ${CL_PFX}"prepare config for busybox $@ profile"${CL_RST}
 	@cd $(BB_PATH) && make clean
 	@cd $(BB_PATH) && git clean -f -- ./include-$@/
-	cp $(BB_PATH)/.config-$@ $(BB_PATH)/.config
+	@sed 's/arm-eabi-/$(BB_CROSS_COMPILE)/g' $(BB_PATH)/.config-$@ > $(BB_PATH)/.config
 	cd $(BB_PATH) && make prepare
-	@#cp $(BB_PATH)/.config $(BB_PATH)/.config-$@
 	@mkdir -p $(BB_PATH)/include-$@
 	cp $(BB_PATH)/include/*.h $(BB_PATH)/include-$@/
 	@rm $(BB_PATH)/include/usage_compressed.h
@@ -89,6 +93,16 @@ ifeq ($(TARGET_ARCH),mips)
 	android/libc/arch-mips/syscalls/sysinfo.S
 endif
 
+ifeq ($(TARGET_ARCH),x86)
+    BUSYBOX_SRC_FILES += \
+	android/libc/arch-x86/syscalls/adjtimex.S \
+	android/libc/arch-x86/syscalls/getsid.S \
+	android/libc/arch-x86/syscalls/stime.S \
+	android/libc/arch-x86/syscalls/swapon.S \
+	android/libc/arch-x86/syscalls/swapoff.S \
+	android/libc/arch-x86/syscalls/sysinfo.S
+endif
+
 BUSYBOX_C_INCLUDES = \
 	$(BB_PATH)/include-$(BUSYBOX_CONFIG) \
 	$(BB_PATH)/include $(BB_PATH)/libbb \
@@ -104,6 +118,7 @@ BUSYBOX_CFLAGS = \
 	-fno-strict-aliasing \
 	-DNDEBUG \
 	-DANDROID \
+	-fno-strict-aliasing \
 	-include include-$(BUSYBOX_CONFIG)/autoconf.h \
 	-D'CONFIG_DEFAULT_MODULES_DIR="$(KERNEL_MODULES_DIR)"' \
 	-D'BB_VER="$(strip $(shell $(SUBMAKE) kernelversion)) $(BUSYBOX_SUFFIX)"' -DBB_BT=AUTOCONF_TIMESTAMP
@@ -116,7 +131,7 @@ endif
 
 # Build the static lib for the recovery tool
 
-BUSYBOX_CONFIG:="minimal$(CONFIG_SUFFIX)"
+BUSYBOX_CONFIG:=minimal
 BUSYBOX_SUFFIX:=static
 LOCAL_SRC_FILES := $(BUSYBOX_SRC_FILES)
 LOCAL_C_INCLUDES := $(BUSYBOX_C_INCLUDES)
@@ -141,7 +156,7 @@ include $(BUILD_STATIC_LIBRARY)
 LOCAL_PATH := $(BB_PATH)
 include $(CLEAR_VARS)
 
-BUSYBOX_CONFIG:="full$(CONFIG_SUFFIX)"
+BUSYBOX_CONFIG:=full
 BUSYBOX_SUFFIX:=bionic
 LOCAL_SRC_FILES := $(BUSYBOX_SRC_FILES)
 ifeq ($(BIONIC_ICS),true)
@@ -181,7 +196,7 @@ ALL_MODULES.$(LOCAL_MODULE).INSTALLED := \
 LOCAL_PATH := $(BB_PATH)
 include $(CLEAR_VARS)
 
-BUSYBOX_CONFIG:="full$(CONFIG_SUFFIX)"
+BUSYBOX_CONFIG:=full
 BUSYBOX_SUFFIX:=static
 LOCAL_SRC_FILES := $(BUSYBOX_SRC_FILES)
 LOCAL_C_INCLUDES := $(BUSYBOX_C_INCLUDES)
