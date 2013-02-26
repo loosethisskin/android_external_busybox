@@ -17,7 +17,6 @@ include $(BUILD_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(shell cat $(BB_PATH)/android/librpc.sources)
 LOCAL_C_INCLUDES := $(BB_PATH)/android/librpc
-LOCAL_CFLAGS := -fno-strict-aliasing
 LOCAL_MODULE := libuclibcrpc
 include $(BUILD_STATIC_LIBRARY)
 
@@ -97,7 +96,6 @@ BUSYBOX_C_INCLUDES = \
 	$(BB_PATH)/android/librpc
 
 BUSYBOX_CFLAGS = \
-	$(subst -I ,-I../../,$(subst -include ,-include ../../,$(TARGET_GLOBAL_CFLAGS))) -I../../bionic/libc/include -I../../bionic/libc/kernel/common -I../../bionic/libc/arch-arm/include -I../../bionic/libc/kernel/arch-arm -I../../bionic/libm/include -fno-stack-protector -Wno-error=format-security -fno-strict-aliasing \
 	-Werror=implicit \
 	-DNDEBUG \
 	-DANDROID \
